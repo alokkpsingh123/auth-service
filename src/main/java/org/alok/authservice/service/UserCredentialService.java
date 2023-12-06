@@ -70,5 +70,9 @@ public class UserCredentialService {
         return repository.findUserEmailByUserId(userId);
     }
 
+    public boolean isUsernameTaken(String username) {
+        return repository.findByUserName(username).isPresent();
+    }
+
 
 }

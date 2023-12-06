@@ -14,6 +14,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,13 +31,33 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    private static final String EMAIL_PATTERN =
+            "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+
+    private static final Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
+    public static boolean isValidEmail(String email) {
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> addNewUser(@RequestBody UserCredential userCredential) {
         Response response = new Response();
         try {
             validateUserCredential(userCredential);
 
-            if (userCredentialService.isEmailRegistered(userCredential.getUserEmail())) {
+            String userName = userCredential.getUserName();
+
+            if (userCredentialService.isUsernameTaken(userName)) {
+                response.setError("Username '" + userName + "' is already taken.");
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+            }
+
+            if (!isValidEmail(userCredential.getUserEmail())) {
+                response.setError("Enter a valid email.");
+                return ResponseEntity.badRequest().body(response);
+            } else if (userCredentialService.isEmailRegistered(userCredential.getUserEmail())) {
                 response.setError("Email '" + userCredential.getUserEmail() + "' is already registered.");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
             }
@@ -52,15 +74,16 @@ public class AuthController {
     }
 
     private void validateUserCredential(UserCredential userCredential) {
-        if (userCredential.getUserEmail() ==  "" &&
-                userCredential.getUserPassword() == "" &&
-                userCredential.getUserName() == "") {
+        if (    (userCredential.getUserEmail() == "" || userCredential.getUserEmail() == null) &&
+                (userCredential.getUserPassword() ==  "" || userCredential.getUserPassword() == null) &&
+                (userCredential.getUserName() ==  "" || userCredential.getUserName() == null)) {
             throw new IllegalArgumentException("One or more required fields are empty");
         }
     }
 
     private void validateAuthRequest(AuthRequest authRequest) {
-        if (authRequest.getUserName() ==  "" && authRequest.getUserPassword() == "" ) {
+        if ( (authRequest.getUserName() ==  "" || authRequest.getUserName() == null) &&
+                (authRequest.getUserPassword() ==  "" || authRequest.getUserPassword() == null)){
             throw new IllegalArgumentException("One or more required fields are empty");
         }
     }
@@ -74,7 +97,7 @@ public class AuthController {
             validateAuthRequest(authRequest);
 
             if (userCredentialService.isValidUser(authRequest.getUserName(), authRequest.getUserPassword())) {
-                String userEmail = userCredentialService.findUserEmailByUserName(authRequest.getUserName()).get();
+//                String userEmail = userCredentialService.findUserEmailByUserName(authRequest.getUserName()).get();
                 String token = authService.generateToken(authRequest.getUserName());
                 String userId = userCredentialService.findUserIdByUserName(authRequest.getUserName()).get();
 
