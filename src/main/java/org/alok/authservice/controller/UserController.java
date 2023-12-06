@@ -40,9 +40,14 @@ public class UserController {
         service.deleteUserCredentialById(userId);
     }
 
-
-    @GetMapping("/get-useremail-by-userid/{userId}")
-    public Optional<String> findUserEmailByUserId(@PathVariable String userId){
-        return service.findUserEmailByUserId(userId);
+    @GetMapping("/find-useremail-by-userid/{userId}")
+    public String findUserEmailByUserId( @PathVariable  String userId){
+        return service.findUserEmailByUserId(userId).get();
     }
+
+
+//    @GetMapping("/get-useremail-by-userid/{userId}")
+//    public Optional<String> findUserEmailByUserId(@PathVariable String userId){
+//        return service.findUserEmailByUserId(userId);
+//    }
 }

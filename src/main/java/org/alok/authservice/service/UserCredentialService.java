@@ -3,6 +3,7 @@ package org.alok.authservice.service;
 import org.alok.authservice.entity.UserCredential;
 import org.alok.authservice.repository.UserCredentialRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -52,7 +53,22 @@ public class UserCredentialService {
         ).orElse(false);
     }
 
-    public Optional<String> findUserEmailByUserId(String userId){
+    public Optional<String> findUserEmailByUserName(String userName){
+        return repository.findUserEmailByUserName(userName);
+    }
+
+    public Optional<String> findUserIdByUserName(String userName){
+        return repository.findUserIdByUserName(userName);
+
+    }
+
+    public boolean isEmailRegistered(String userEmail){
+        return repository.isEmailRegistered(userEmail);
+    }
+
+    public Optional<String> findUserEmailByUserId( String userId){
         return repository.findUserEmailByUserId(userId);
     }
+
+
 }
